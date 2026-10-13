@@ -151,14 +151,14 @@ export default function ManagementPortal() {
                 </span>
               </h1>
               <p className="text-xs text-slate-400">
-                {user?.fullName} ({user?.employeeCode}) • Phân hệ Quản trị & Điều hành Doanh nghiệp
+                {user?.employee?.fullName || user?.email} ({user?.employee?.employeeCode || 'ADMIN'}) • Phân hệ Quản trị & Điều hành Doanh nghiệp
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => switchPortal('EMPLOYEE_PORTAL')}
+              onClick={() => switchPortal('employee-portal')}
               className="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
               title="Chuyển về trang Nhân viên ESS"
             >

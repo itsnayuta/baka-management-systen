@@ -143,3 +143,4 @@ pnpm build:web
 ### Cách 2: Triển Khai Cloud Tách Biệt
 - **Backend API:** Deploy lên Railway, Render, hoặc AWS ECS Fargate với biến môi trường `DATABASE_URL` (kết nối Supabase / AWS RDS).
 - **Frontend Web:** Deploy lên Vercel / Cloudflare Pages / Coolify, cấu hình biến `NEXT_PUBLIC_API_URL` trỏ về domain Backend API.
+

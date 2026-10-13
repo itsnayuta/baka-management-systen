@@ -3,12 +3,16 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v
 
 export interface UserProfile {
   id: string;
-  employeeCode: string;
-  fullName: string;
   email: string;
   role: string;
-  departmentName?: string;
-  portal?: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL';
+  employee?: {
+    id: string;
+    employeeCode: string;
+    fullName: string;
+    department?: {
+      name: string;
+    };
+  };
 }
 
 class ApiClient {
@@ -35,57 +39,58 @@ class ApiClient {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(errorData.message || `Request failed with status ${res.status}`);
+      const msg = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
+      throw new Error(msg || `Request failed with status ${res.status}`);
     }
 
     return res.json();
   }
 
   // Auth endpoints
-  async login(employeeCode: string, password: string, portal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL') {
-    return this.request<{ accessToken: string; user: UserProfile }>('/auth/login', {
+  async login(email: string, password: string, portal: 'employee-portal' | 'management-portal') {
+    return this.request<{ accessToken: string; portal: string; user: UserProfile }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ employeeCode, password, portal }),
+      body: JSON.stringify({ email, password, portal }),
     });
   }
 
-  // Attendance endpoints
+  // Attendance endpoints (Self / ESS)
   async checkIn(latitude: number, longitude: number) {
-    return this.request('/attendance/check-in', {
+    return this.request('/self/attendance/check-in', {
       method: 'POST',
       body: JSON.stringify({ latitude, longitude }),
     });
   }
 
   async checkOut(latitude: number, longitude: number) {
-    return this.request('/attendance/check-out', {
+    return this.request('/self/attendance/check-out', {
       method: 'POST',
       body: JSON.stringify({ latitude, longitude }),
     });
   }
 
   async getAttendanceHistory() {
-    return this.request<any[]>('/attendance/history');
+    return this.request<any[]>('/self/attendance/history');
   }
 
   // Tasks & EVM endpoints
   async getMyTasks() {
-    return this.request<any[]>('/tasks/my-tasks');
+    return this.request<any[]>('/self/tasks');
   }
 
   async logWork(taskId: string, hoursSpent: number, description?: string) {
-    return this.request('/tasks/worklog', {
+    return this.request('/self/tasks/worklog', {
       method: 'POST',
       body: JSON.stringify({ taskId, hoursSpent, description }),
     });
   }
 
   async getProjects() {
-    return this.request<any[]>('/tasks/projects');
+    return this.request<any[]>('/management/tasks/projects');
   }
 
   async getWorkloadHeatmap() {
-    return this.request<any[]>('/tasks/workload/heatmap');
+    return this.request<any[]>('/management/tasks/workload/heatmap');
   }
 
   // Finance endpoints
@@ -97,11 +102,11 @@ class ApiClient {
       cashBalance: number;
       burnRatePerMonth: number;
       runwayMonths: number;
-    }>('/finance/dashboard');
+    }>('/management/finance/dashboard');
   }
 
   async getLedger() {
-    return this.request<any[]>('/finance/ledger');
+    return this.request<any[]>('/management/finance/ledger');
   }
 
   async createJournalEntry(dto: {
@@ -109,7 +114,7 @@ class ApiClient {
     referenceCode?: string;
     entries: Array<{ accountCode: string; debitAmount: number; creditAmount: number }>;
   }) {
-    return this.request('/finance/journal-entry', {
+    return this.request('/management/finance/journal-entry', {
       method: 'POST',
       body: JSON.stringify(dto),
     });
@@ -117,18 +122,18 @@ class ApiClient {
 
   // Payroll endpoints
   async getMyPayslips() {
-    return this.request<any[]>('/payroll/my-payslips');
+    return this.request<any[]>('/self/payroll/my-payslips');
   }
 
   async calculateMonthlyPayroll(month: number, year: number) {
-    return this.request<any[]>(`/payroll/calculate?month=${month}&year=${year}`, {
+    return this.request<any[]>(`/management/payroll/calculate?month=${month}&year=${year}`, {
       method: 'POST',
     });
   }
 
   // Approvals endpoints
   async getMyApprovalRequests() {
-    return this.request<any[]>('/approvals/my-requests');
+    return this.request<any[]>('/self/approvals/my-requests');
   }
 
   async createApprovalRequest(dto: {
@@ -137,18 +142,18 @@ class ApiClient {
     amount?: number;
     description: string;
   }) {
-    return this.request('/approvals/request', {
+    return this.request('/self/approvals/requests', {
       method: 'POST',
       body: JSON.stringify(dto),
     });
   }
 
   async getPendingApprovals() {
-    return this.request<any[]>('/approvals/pending');
+    return this.request<any[]>('/management/approvals/pending');
   }
 
   async decideApproval(requestId: string, action: 'APPROVE' | 'REJECT', comments?: string) {
-    return this.request(`/approvals/${requestId}/decide`, {
+    return this.request(`/management/approvals/${requestId}/decide`, {
       method: 'POST',
       body: JSON.stringify({ action, comments }),
     });
@@ -156,4 +161,3 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
-

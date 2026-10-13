@@ -3,13 +3,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { api, UserProfile } from './api';
 
+export type PortalType = 'employee-portal' | 'management-portal';
+
 interface AuthContextType {
   user: UserProfile | null;
   token: string | null;
-  portal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL';
-  login: (employeeCode: string, password: string, portal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL') => Promise<void>;
+  portal: PortalType;
+  login: (email: string, password: string, portal: PortalType) => Promise<void>;
   logout: () => void;
-  switchPortal: (newPortal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL') => void;
+  switchPortal: (newPortal: PortalType) => void;
   isLoading: boolean;
 }
 
@@ -18,14 +20,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [portal, setPortal] = useState<'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL'>('EMPLOYEE_PORTAL');
+  const [portal, setPortal] = useState<PortalType>('employee-portal');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // ponytail: Rehydrate session from localStorage with zero external cookies/storage libraries
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    const savedPortal = localStorage.getItem('portal') as 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL';
+    const savedPortal = localStorage.getItem('portal') as PortalType;
 
     if (savedToken && savedUser) {
       try {
@@ -40,11 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (
-    employeeCode: string,
+    email: string,
     password: string,
-    targetPortal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL',
+    targetPortal: PortalType,
   ) => {
-    const data = await api.login(employeeCode, password, targetPortal);
+    const data = await api.login(email, password, targetPortal);
     setToken(data.accessToken);
     setUser(data.user);
     setPortal(targetPortal);
@@ -60,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.clear();
   };
 
-  const switchPortal = (newPortal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL') => {
+  const switchPortal = (newPortal: PortalType) => {
     setPortal(newPortal);
     localStorage.setItem('portal', newPortal);
   };
@@ -89,4 +91,3 @@ export function useAuth() {
   }
   return context;
 }
-

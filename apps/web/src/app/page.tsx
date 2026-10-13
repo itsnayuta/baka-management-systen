@@ -1,25 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, PortalType } from '@/lib/auth-context';
 import EmployeePortal from '@/components/employee/EmployeePortal';
 import ManagementPortal from '@/components/management/ManagementPortal';
-import { Users, Shield, ArrowRight, CheckCircle2, Lock, User, Sparkles } from 'lucide-react';
+import { Users, Shield, ArrowRight, CheckCircle2, Lock, Mail, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
   const { user, portal, login, isLoading } = useAuth();
 
-  const [selectedPortal, setSelectedPortal] = useState<'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL'>(
-    'EMPLOYEE_PORTAL',
-  );
-  const [employeeCode, setEmployeeCode] = useState('DEV001');
-  const [password, setPassword] = useState('Dev@123456');
+  const [selectedPortal, setSelectedPortal] = useState<PortalType>('employee-portal');
+  const [email, setEmail] = useState('dev@company.vn');
+  const [password, setPassword] = useState('Admin123@');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Quick Preset Selector
-  const selectPreset = (code: string, pass: string, targetPortal: 'EMPLOYEE_PORTAL' | 'MANAGEMENT_PORTAL') => {
-    setEmployeeCode(code);
+  const selectPreset = (userEmail: string, pass: string, targetPortal: PortalType) => {
+    setEmail(userEmail);
     setPassword(pass);
     setSelectedPortal(targetPortal);
     setAuthError(null);
@@ -30,7 +28,7 @@ export default function HomePage() {
     setIsSubmitting(true);
     setAuthError(null);
     try {
-      await login(employeeCode, password, selectedPortal);
+      await login(email, password, selectedPortal);
     } catch (err: any) {
       setAuthError(err.message || 'Đăng nhập không thành công.');
     } finally {
@@ -48,7 +46,7 @@ export default function HomePage() {
 
   // If already authenticated, display corresponding portal
   if (user) {
-    if (portal === 'EMPLOYEE_PORTAL') {
+    if (portal === 'employee-portal') {
       return <EmployeePortal />;
     }
     return <ManagementPortal />;
@@ -75,12 +73,12 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => {
-                setSelectedPortal('EMPLOYEE_PORTAL');
-                setEmployeeCode('DEV001');
-                setPassword('Dev@123456');
+                setSelectedPortal('employee-portal');
+                setEmail('dev@company.vn');
+                setPassword('Admin123@');
               }}
               className={`py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
-                selectedPortal === 'EMPLOYEE_PORTAL'
+                selectedPortal === 'employee-portal'
                   ? 'bg-emerald-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
               }`}
@@ -91,12 +89,12 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => {
-                setSelectedPortal('MANAGEMENT_PORTAL');
-                setEmployeeCode('BOD001');
-                setPassword('Admin@123456');
+                setSelectedPortal('management-portal');
+                setEmail('ceo@company.vn');
+                setPassword('Admin123@');
               }}
               className={`py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
-                selectedPortal === 'MANAGEMENT_PORTAL'
+                selectedPortal === 'management-portal'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
               }`}
@@ -115,17 +113,17 @@ export default function HomePage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Mã nhân viên</label>
+              <label className="block text-xs font-medium text-slate-300 mb-1">Email tài khoản</label>
               <div className="relative">
                 <input
-                  type="text"
+                  type="email"
                   required
-                  placeholder="VD: DEV001, BOD001..."
-                  value={employeeCode}
-                  onChange={(e) => setEmployeeCode(e.target.value)}
+                  placeholder="VD: dev@company.vn, ceo@company.vn..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
                 />
-                <User className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
+                <Mail className="w-4 h-4 text-slate-500 absolute right-3.5 top-3" />
               </div>
             </div>
 
@@ -147,7 +145,7 @@ export default function HomePage() {
               type="submit"
               disabled={isSubmitting}
               className={`w-full text-white font-semibold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition ${
-                selectedPortal === 'EMPLOYEE_PORTAL'
+                selectedPortal === 'employee-portal'
                   ? 'bg-emerald-600 hover:bg-emerald-500'
                   : 'bg-blue-600 hover:bg-blue-500'
               } disabled:opacity-50`}
@@ -165,26 +163,26 @@ export default function HomePage() {
             <div className="space-y-1.5 text-xs">
               <button
                 type="button"
-                onClick={() => selectPreset('BOD001', 'Admin@123456', 'MANAGEMENT_PORTAL')}
+                onClick={() => selectPreset('ceo@company.vn', 'Admin123@', 'management-portal')}
                 className="w-full text-left p-2 rounded-lg bg-slate-950/60 hover:bg-slate-850 border border-slate-800 flex items-center justify-between text-slate-300 hover:text-white transition"
               >
-                <span>👑 Nguyễn Văn An (BOD001) - Tổng Giám Đốc</span>
+                <span>👑 Trần Văn Giám Đốc (CEO - EMP-002)</span>
                 <span className="text-[10px] text-blue-400 font-mono">BOD Portal</span>
               </button>
               <button
                 type="button"
-                onClick={() => selectPreset('HR001', 'HR@123456', 'MANAGEMENT_PORTAL')}
+                onClick={() => selectPreset('cfo@company.vn', 'Admin123@', 'management-portal')}
                 className="w-full text-left p-2 rounded-lg bg-slate-950/60 hover:bg-slate-850 border border-slate-800 flex items-center justify-between text-slate-300 hover:text-white transition"
               >
-                <span>💼 Trần Thị Mai (HR001) - Trưởng Phòng HR</span>
+                <span>💼 Nguyễn Thị Kế Toán Trưởng (CFO - EMP-003)</span>
                 <span className="text-[10px] text-purple-400 font-mono">Admin Portal</span>
               </button>
               <button
                 type="button"
-                onClick={() => selectPreset('DEV001', 'Dev@123456', 'EMPLOYEE_PORTAL')}
+                onClick={() => selectPreset('dev@company.vn', 'Admin123@', 'employee-portal')}
                 className="w-full text-left p-2 rounded-lg bg-slate-950/60 hover:bg-slate-850 border border-slate-800 flex items-center justify-between text-slate-300 hover:text-white transition"
               >
-                <span>💻 Lê Hoàng Long (DEV001) - Senior Developer</span>
+                <span>💻 Phạm Lập Trình Viên (Senior Dev - EMP-005)</span>
                 <span className="text-[10px] text-emerald-400 font-mono">ESS Portal</span>
               </button>
             </div>

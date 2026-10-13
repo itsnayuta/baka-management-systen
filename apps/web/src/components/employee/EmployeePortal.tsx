@@ -172,19 +172,19 @@ export default function EmployeePortal() {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">
-              {user?.fullName.charAt(0) || 'U'}
+              {user?.employee?.fullName?.charAt(0) || user?.email?.charAt(0) || 'U'}
             </div>
             <div>
-              <h1 className="font-semibold text-base leading-tight">{user?.fullName}</h1>
+              <h1 className="font-semibold text-base leading-tight">{user?.employee?.fullName || user?.email}</h1>
               <p className="text-xs text-emerald-100">
-                {user?.employeeCode} • {user?.role}
+                {user?.employee?.employeeCode || 'NV'} • {user?.role}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             {isManagerOrAdmin && (
               <button
-                onClick={() => switchPortal('MANAGEMENT_PORTAL')}
+                onClick={() => switchPortal('management-portal')}
                 className="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition"
                 title="Chuyển sang trang Quản lý"
               >
