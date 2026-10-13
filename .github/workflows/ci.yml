@@ -45,3 +45,6 @@ jobs:
 
       - name: 7. Verify Production NestJS Build
         run: pnpm build:backend
+
+      - name: 8. Verify Next.js Web Production Build
+        run: pnpm build:web
