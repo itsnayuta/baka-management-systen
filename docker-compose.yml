@@ -42,7 +42,43 @@ services:
     depends_on:
       - postgres
 
+  backend-api:
+    build:
+      context: .
+      dockerfile: apps/backend-api/Dockerfile
+    container_name: erp-backend-api
+    restart: always
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://erp_user:erp_password_secure@postgres:5432/erp_core_db?schema=public"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: super_secret_jwt_key_erp_dx_2026_change_in_production
+      JWT_EXPIRES_IN: 7d
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: erp-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: "http://localhost:4000/api/v1"
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend-api
+
 volumes:
   postgres_data:
   redis_data:
-

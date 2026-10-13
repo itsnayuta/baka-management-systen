@@ -13,6 +13,7 @@
     "lint:web": "pnpm --filter web lint",
     "db:up": "docker compose up -d postgres redis",
     "db:down": "docker compose down",
+    "docker:all": "docker compose up --build -d",
     "prisma:generate": "pnpm --filter backend-api run prisma:generate",
     "prisma:migrate": "pnpm --filter backend-api run prisma:migrate",
     "prisma:seed": "pnpm --filter backend-api run prisma:seed"

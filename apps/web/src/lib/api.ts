@@ -1,5 +1,5 @@
 // ponytail: Lightweight fetch wrapper with zero external HTTP client dependencies (Axios-free)
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export interface UserProfile {
   id: string;
@@ -156,3 +156,4 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
+
