@@ -18,11 +18,11 @@
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
     "lint": "oxlint --type-aware src/ test/",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:cov": "vitest run --coverage",
-    "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test": "vitest run --config ./vitest.config.mjs",
+    "test:watch": "vitest --config ./vitest.config.mjs",
+    "test:cov": "vitest run --coverage --config ./vitest.config.mjs",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism --config ./vitest.config.mjs",
+    "test:e2e": "vitest run --config ./vitest.config.e2e.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
