@@ -10,3 +10,4 @@ export default defineConfig({
     include: ['**/*.e2e-spec.ts'],
   },
 });
+

@@ -1,0 +1,44 @@
+name: Enterprise ERP CI/CD Quality Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Lint, Test & Build Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 1. Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: 2. Install pnpm package manager
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - name: 3. Setup Node.js Runtime (LTS v22)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: 4. Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 5. Generate Prisma Client
+        run: pnpm prisma:generate
+
+      - name: 6. Run Automated Test Suite (23 Unit & Security Tests)
+        run: pnpm test:backend
+
+      - name: 7. Verify Production NestJS Build
+        run: pnpm build:backend
