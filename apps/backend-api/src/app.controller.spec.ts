@@ -1,22 +1,13 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
+import { describe, it, expect } from 'vitest';
+import { AppController } from './app.controller';
 
-describe('AppController', () => {
-  let appController: AppController;
+describe('AppController (Health Check)', () => {
+  it('nên trả về trạng thái ok và uptime hợp lệ cho health check', () => {
+    const controller = new AppController();
+    const result = controller.health();
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
-
-    appController = app.get<AppController>(AppController);
-  });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
-    });
+    expect(result.status).toBe('ok');
+    expect(result.uptime).toBeGreaterThanOrEqual(0);
+    expect(result.timestamp).toBeDefined();
   });
 });

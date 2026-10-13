@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface CreateJournalEntryDto {
@@ -33,13 +33,8 @@ export class FinanceService {
     }
 
     // Kiểm tra nguyên tắc kế toán kép: Tổng Nợ (Debit) phải bằng Tổng Có (Credit)
-    let totalDebit = 0;
-    let totalCredit = 0;
-
-    for (const line of dto.lines) {
-      totalDebit += Number(line.debitAmount) || 0;
-      totalCredit += Number(line.creditAmount) || 0;
-    }
+    const totalDebit = dto.lines.reduce((sum, l) => sum + (Number(l.debitAmount) || 0), 0);
+    const totalCredit = dto.lines.reduce((sum, l) => sum + (Number(l.creditAmount) || 0), 0);
 
     // Làm tròn đến 2 chữ số thập phân để so sánh
     const diff = Math.abs(Math.round(totalDebit * 100) - Math.round(totalCredit * 100));

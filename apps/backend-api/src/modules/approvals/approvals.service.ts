@@ -31,16 +31,8 @@ export class ApprovalsService {
     const amount = Number(dto.amount) || 0;
     const requestNumber = `REQ-${Date.now().toString().slice(-6)}`;
 
-    // Động cơ rẽ nhánh phê duyệt theo hạn mức số tiền:
-    // <= 10tr: 1 cấp duyệt (Quản lý trực tiếp)
-    // 10tr - 50tr: 2 cấp duyệt (Quản lý trực tiếp + Kế toán trưởng)
-    // > 50tr: 3 cấp duyệt (Quản lý trực tiếp + Kế toán trưởng + Ban Giám Đốc)
-    let totalSteps = 1;
-    if (amount > 50000000) {
-      totalSteps = 3;
-    } else if (amount > 10000000) {
-      totalSteps = 2;
-    }
+    // ponytail: Tiered approvals hardcoded to 10M / 50M thresholds; when business requires dynamic workflow matrix per department, upgrade to workflow_definitions DB table
+    const totalSteps = amount > 50000000 ? 3 : amount > 10000000 ? 2 : 1;
 
     return this.prisma.$transaction(async (tx) => {
       const request = await tx.approvalRequest.create({

@@ -178,7 +178,7 @@ export class TasksService {
   }
 
   async getWorkloadHeatmap() {
-    // Tổng hợp số giờ làm việc theo từng nhân viên trong 30 ngày qua
+    // ponytail: In-memory O(N) aggregation is optimal for < 10k logs/month; when logs exceed 100k, upgrade to PostgreSQL GROUP BY (prisma.$queryRaw)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 

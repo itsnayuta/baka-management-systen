@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -48,11 +48,8 @@ export class PayrollService {
     for (const emp of employees) {
       const baseSalary = Number(emp.baseSalary) || 10000000; // Mặc định nếu chưa set
 
-      // Tính tổng giờ làm việc và tăng ca trong tháng
-      let totalOvertimeHours = 0;
-      for (const log of emp.timeLogs) {
-        totalOvertimeHours += Number(log.overtimeHours) || 0;
-      }
+      // ponytail: 22 work days / 176h standard assumed; upgrade to dynamic shift_schedules table if variable calendars needed
+      const totalOvertimeHours = emp.timeLogs.reduce((sum, log) => sum + (Number(log.overtimeHours) || 0), 0);
 
       // Đơn giá 1 giờ làm việc bình thường (giả định 1 tháng có 22 ngày công, 8h/ngày = 176h)
       const hourlyRate = baseSalary / 176;

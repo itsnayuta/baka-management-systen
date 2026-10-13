@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface CheckInDto {
@@ -22,7 +22,7 @@ export class AttendanceService {
     today.setHours(0, 0, 0, 0);
 
     const now = new Date();
-    // Giả định ca sáng bắt đầu 8:30. Quá 8:35 tính là đi muộn
+    // ponytail: Standard work shift hardcoded to 8:30 start; when multi-shift roster is needed, upgrade to shift_schedules table
     const standardStart = new Date(today);
     standardStart.setHours(8, 35, 0, 0);
     const isLate = now > standardStart;

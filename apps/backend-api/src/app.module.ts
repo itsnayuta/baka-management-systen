@@ -8,7 +8,6 @@ import { FinanceModule } from './modules/finance/finance.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { ApprovalsModule } from './modules/approvals/approvals.module';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -25,6 +24,5 @@ import { AppService } from './app.service';
     ApprovalsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

@@ -1,12 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service.js';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Health & Monitoring')
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('health')
+  @ApiOperation({ summary: 'Liveness & Readiness probe cho Docker / Kubernetes / Cloudflare' })
+  health() {
+    return {
+      status: 'ok',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+    };
   }
 }
