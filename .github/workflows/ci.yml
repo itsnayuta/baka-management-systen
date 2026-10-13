@@ -22,8 +22,6 @@ jobs:
 
       - name: 2. Install pnpm package manager
         uses: pnpm/action-setup@v4
-        with:
-          version: 12
 
       - name: 3. Setup Node.js Runtime (LTS v22)
         uses: actions/setup-node@v4
@@ -36,9 +34,14 @@ jobs:
 
       - name: 5. Generate Prisma Client
         run: pnpm prisma:generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dummy?schema=public"
 
       - name: 6. Run Automated Test Suite (23 Unit & Security Tests)
         run: pnpm test:backend
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dummy?schema=public"
+          JWT_SECRET: "test_secret_for_ci_pipeline"
 
       - name: 7. Verify Production NestJS Build
         run: pnpm build:backend
