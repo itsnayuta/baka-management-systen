@@ -46,7 +46,7 @@ class ApiClient {
     return res.json();
   }
 
-  // Auth endpoints
+  // ================= Auth Endpoints =================
   async login(email: string, password: string, portal: 'employee-portal' | 'management-portal') {
     return this.request<{ accessToken: string; portal: string; user: UserProfile }>('/auth/login', {
       method: 'POST',
@@ -54,7 +54,7 @@ class ApiClient {
     });
   }
 
-  // Attendance endpoints (Self / ESS)
+  // ================= Attendance Endpoints (Self / ESS) =================
   async checkIn(latitude: number, longitude: number) {
     return this.request('/self/attendance/check-in', {
       method: 'POST',
@@ -73,27 +73,81 @@ class ApiClient {
     return this.request<any[]>('/self/attendance/history');
   }
 
-  // Tasks & EVM endpoints
+  // ================= Tasks & Progress Management (Employee) =================
   async getMyTasks() {
     return this.request<any[]>('/self/tasks');
   }
 
-  async logWork(taskId: string, hoursSpent: number, description?: string) {
-    return this.request('/self/tasks/worklog', {
-      method: 'POST',
-      body: JSON.stringify({ taskId, hoursSpent, description }),
+  async updateMyTaskStatus(taskId: string, status: string) {
+    return this.request(`/self/tasks/${taskId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   }
 
+  async logWork(taskId: string, hours: number, description?: string) {
+    return this.request(`/self/tasks/${taskId}/work-log`, {
+      method: 'POST',
+      body: JSON.stringify({ hours, description }),
+    });
+  }
+
+  // ================= Tasks & Progress Management (Management Operations) =================
   async getProjects() {
-    return this.request<any[]>('/management/tasks/projects');
+    return this.request<any[]>('/management/operations/projects');
+  }
+
+  async createProject(dto: {
+    projectCode: string;
+    name: string;
+    description?: string;
+    managerId?: string;
+    estimatedBudget: number;
+    startDate?: string;
+    deadline?: string;
+  }) {
+    return this.request('/management/operations/projects', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async getAllTasks(projectId?: string) {
+    const qs = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+    return this.request<any[]>(`/management/operations/tasks${qs}`);
+  }
+
+  async createTask(dto: {
+    projectId: string;
+    title: string;
+    description?: string;
+    priority?: string;
+    estimatedHours: number;
+    dueDate?: string;
+    assigneeIds?: string[];
+  }) {
+    return this.request('/management/operations/tasks', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async updateTaskStatusForManager(taskId: string, status: string) {
+    return this.request(`/management/operations/tasks/${taskId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async getEmployees() {
+    return this.request<any[]>('/management/operations/employees');
   }
 
   async getWorkloadHeatmap() {
-    return this.request<any[]>('/management/tasks/workload/heatmap');
+    return this.request<any[]>('/management/operations/workload-heatmap');
   }
 
-  // Finance endpoints
+  // ================= Finance Endpoints =================
   async getFinanceDashboard() {
     return this.request<{
       totalRevenue: number;
@@ -120,7 +174,7 @@ class ApiClient {
     });
   }
 
-  // Payroll endpoints
+  // ================= Payroll Endpoints =================
   async getMyPayslips() {
     return this.request<any[]>('/self/payroll/my-payslips');
   }
@@ -131,7 +185,7 @@ class ApiClient {
     });
   }
 
-  // Approvals endpoints
+  // ================= Approvals Endpoints =================
   async getMyApprovalRequests() {
     return this.request<any[]>('/self/approvals/my-requests');
   }

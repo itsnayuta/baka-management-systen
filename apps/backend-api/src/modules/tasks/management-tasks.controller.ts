@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { TasksService, CreateProjectDto, CreateTaskDto } from './tasks.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -29,10 +29,29 @@ export class ManagementTasksController {
     return this.tasksService.createProject(dto);
   }
 
+  @Get('tasks')
+  @ApiOperation({ summary: 'Lấy toàn bộ công việc cho Kanban & Gantt timeline' })
+  @ApiQuery({ name: 'projectId', required: false })
+  async getAllTasks(@Query('projectId') projectId?: string) {
+    return this.tasksService.getAllTasks(projectId);
+  }
+
   @Post('tasks')
   @ApiOperation({ summary: 'Tạo nhiệm vụ (WBS Task) và phân công nhân sự' })
   async createTask(@Body() dto: CreateTaskDto) {
     return this.tasksService.createTask(dto);
+  }
+
+  @Patch('tasks/:id/status')
+  @ApiOperation({ summary: 'Cập nhật trạng thái công việc (Quản trị viên)' })
+  async updateTaskStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.tasksService.updateTaskStatusForManager(id, status);
+  }
+
+  @Get('employees')
+  @ApiOperation({ summary: 'Danh sách nhân sự để phân công giao việc' })
+  async getEmployees() {
+    return this.tasksService.getEmployees();
   }
 
   @Get('workload-heatmap')
@@ -41,4 +60,3 @@ export class ManagementTasksController {
     return this.tasksService.getWorkloadHeatmap();
   }
 }
-

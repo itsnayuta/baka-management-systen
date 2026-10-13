@@ -177,6 +177,49 @@ export class TasksService {
     });
   }
 
+  async getAllTasks(projectId?: string) {
+    return this.prisma.task.findMany({
+      where: projectId ? { projectId } : undefined,
+      include: {
+        project: { select: { id: true, name: true, projectCode: true } },
+        assignees: {
+          include: {
+            employee: { select: { id: true, fullName: true, employeeCode: true } },
+          },
+        },
+        _count: { select: { workLogs: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateTaskStatusForManager(taskId: string, status: string) {
+    return this.prisma.task.update({
+      where: { id: taskId },
+      data: { status },
+      include: {
+        project: { select: { id: true, name: true, projectCode: true } },
+        assignees: {
+          include: {
+            employee: { select: { id: true, fullName: true, employeeCode: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async getEmployees() {
+    return this.prisma.employee.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        employeeCode: true,
+        department: { select: { name: true } },
+      },
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
   async getWorkloadHeatmap() {
     // ponytail: In-memory O(N) aggregation is optimal for < 10k logs/month; when logs exceed 100k, upgrade to PostgreSQL GROUP BY (prisma.$queryRaw)
     const thirtyDaysAgo = new Date();
