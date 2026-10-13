@@ -1,0 +1,277 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  DIRECTOR
+  HR_MANAGER
+  FINANCE_MANAGER
+  PROJECT_MANAGER
+  EMPLOYEE
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  password   String
+  role       Role      @default(EMPLOYEE)
+  isActive   Boolean   @default(true)
+  employeeId String?   @unique
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Department {
+  id           String        @id @default(uuid())
+  code         String        @unique
+  name         String
+  description  String?
+  managerId    String?
+  employees    Employee[]
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("departments")
+}
+
+model Employee {
+  id              String            @id @default(uuid())
+  employeeCode    String            @unique
+  fullName        String
+  email           String            @unique
+  phone           String?
+  status          String            @default("ACTIVE") // ACTIVE, PROBATION, TERMINATED
+  hourlyCostRate  Decimal           @default(0) @db.Decimal(12, 2)
+  baseSalary      Decimal           @default(0) @db.Decimal(15, 2)
+  hireDate        DateTime          @default(now())
+  departmentId    String?
+  department      Department?       @relation(fields: [departmentId], references: [id])
+  directManagerId String?
+  directManager   Employee?         @relation("ManagerSubordinates", fields: [directManagerId], references: [id])
+  subordinates    Employee[]        @relation("ManagerSubordinates")
+  user            User?
+  timeLogs        TimeLog[]
+  taskAssignments TaskAssignee[]
+  workLogs        WorkLog[]
+  payrollItems    PayrollItem[]
+  managedProjects Project[]         @relation("ManagedProjects")
+  requests        ApprovalRequest[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@map("employees")
+}
+
+model TimeLog {
+  id                 String    @id @default(uuid())
+  employeeId         String
+  employee           Employee  @relation(fields: [employeeId], references: [id])
+  workDate           DateTime  @db.Date
+  checkIn            DateTime?
+  checkOut           DateTime?
+  workingHours       Decimal   @default(0) @db.Decimal(5, 2)
+  overtimeHours      Decimal   @default(0) @db.Decimal(5, 2)
+  verificationMethod String    @default("GPS_APP") // FINGERPRINT, FACE_ID, GPS_APP
+  checkInLat         Float?
+  checkInLng         Float?
+  isLate             Boolean   @default(false)
+  isEarlyLeave       Boolean   @default(false)
+  status             String    @default("CONFIRMED")
+  createdAt          DateTime  @default(now())
+
+  @@unique([employeeId, workDate])
+  @@map("time_logs")
+}
+
+model Project {
+  id              String        @id @default(uuid())
+  projectCode     String        @unique
+  name            String
+  description     String?
+  managerId       String?
+  manager         Employee?     @relation("ManagedProjects", fields: [managerId], references: [id])
+  estimatedBudget Decimal       @default(0) @db.Decimal(15, 2)
+  actualCost      Decimal       @default(0) @db.Decimal(15, 2)
+  status          String        @default("PLANNING") // PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD
+  startDate       DateTime?
+  deadline        DateTime?
+  tasks           Task[]
+  journalLines    JournalLine[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("projects")
+}
+
+model Task {
+  id             String         @id @default(uuid())
+  projectId      String
+  project        Project        @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  priority       String         @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status         String         @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  estimatedHours Decimal        @default(0) @db.Decimal(5, 2)
+  actualHours    Decimal        @default(0) @db.Decimal(5, 2)
+  dueDate        DateTime?
+  assignees      TaskAssignee[]
+  workLogs       WorkLog[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([taskId, employeeId])
+  @@map("task_assignees")
+}
+
+model WorkLog {
+  id             String   @id @default(uuid())
+  taskId         String
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  logDate        DateTime @default(now())
+  hoursSpent     Decimal  @db.Decimal(5, 2)
+  hourlyCostRate Decimal  @db.Decimal(12, 2)
+  description    String?
+  createdAt      DateTime @default(now())
+
+  @@map("work_logs")
+}
+
+model Account {
+  accountCode  String        @id
+  accountName  String
+  accountType  AccountType
+  isActive     Boolean       @default(true)
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id              String        @id @default(uuid())
+  entryNumber     String        @unique
+  transactionDate DateTime      @default(now())
+  referenceType   String        @default("MANUAL") // INVOICE, EXPENSE, PAYROLL, MANUAL
+  referenceId     String?
+  description     String
+  status          String        @default("POSTED") // DRAFT, POSTED, VOIDED
+  createdById     String?
+  lines           JournalLine[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id           String       @id @default(uuid())
+  entryId      String
+  entry        JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountCode  String
+  account      Account      @relation(fields: [accountCode], references: [accountCode])
+  debitAmount  Decimal      @default(0) @db.Decimal(15, 2)
+  creditAmount Decimal      @default(0) @db.Decimal(15, 2)
+  projectId    String?
+  project      Project?     @relation(fields: [projectId], references: [id])
+  departmentId String?
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  note         String?
+
+  @@map("journal_lines")
+}
+
+model PayrollItem {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  employee           Employee @relation(fields: [employeeId], references: [id])
+  periodMonth        String // "2026-10"
+  baseSalary         Decimal  @db.Decimal(15, 2)
+  bonus              Decimal  @default(0) @db.Decimal(15, 2)
+  allowances         Decimal  @default(0) @db.Decimal(15, 2)
+  insuranceDeduction Decimal  @default(0) @db.Decimal(15, 2)
+  taxDeduction       Decimal  @default(0) @db.Decimal(15, 2)
+  netSalary          Decimal  @db.Decimal(15, 2)
+  status             String   @default("DRAFT") // DRAFT, APPROVED, PAID
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([employeeId, periodMonth])
+  @@map("payroll_items")
+}
+
+model ApprovalRequest {
+  id                 String         @id @default(uuid())
+  requestNumber      String         @unique
+  requesterId        String
+  requester          Employee       @relation(fields: [requesterId], references: [id])
+  type               String // LEAVE, EXPENSE, ADVANCE, OVERTIME
+  title              String
+  amount             Decimal?       @db.Decimal(15, 2)
+  content            String?
+  status             String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  currentApproverId  String?
+  steps              ApprovalStep[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@map("approval_requests")
+}
+
+model ApprovalStep {
+  id         String          @id @default(uuid())
+  requestId  String
+  request    ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  stepOrder  Int
+  approverId String?
+  status     String          @default("PENDING") // PENDING, APPROVED, REJECTED
+  comment    String?
+  updatedAt  DateTime        @default(now())
+
+  @@map("approval_steps")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  timestamp    DateTime @default(now())
+  actorId      String?
+  actorName    String?
+  action       String
+  targetEntity String
+  targetId     String?
+  beforeState  Json?
+  afterState   Json?
+  ipAddress    String?
+
+  @@map("audit_logs")
+}
+
